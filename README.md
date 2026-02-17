@@ -17,9 +17,11 @@ the streaming **packet** is the raw bits stream sent to interrupt functions. The
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | 0-1 | 0-1 | 0-1 | 0-1 | 0-1 | 0-1 | 0-1 | 0-1 | 0 |
 
-## FIFO Buffer
+## FIFO Buffers
 ```
-template<class ETYPE> class Queue
+static volatile Queue<ushort> i_buffer_tx(BUFFERSIZE);
+static volatile Queue<ushort> i_buffer_rx(BUFFERSIZE);
 ```
+
 
 
