@@ -13,7 +13,6 @@ private:
 public:
 	int MilliSecondForByte;
 
-
 	SoftSerial() {
 		tx = -1;
 		rx = -1;
@@ -39,6 +38,7 @@ public:
 	}
 
 	// Since reading must use timer1, writing will also be enabled
+	// WARNING: rx use digitalPinToInterrupt, check your board specification
 	bool Begin(byte tx, byte rx, uint baud = 9600, uint config = SERIAL_8N1) {
 
 		if (!Begin(tx, baud, config)) return false;
@@ -95,14 +95,13 @@ public:
 		return Read(valid);
 	}
 
+	//DEPRECATED
 	// Non-blocking function but blocking until the previous data is written
 	Write_WaitAsync(byte data) {
 		//wait for the previous outgoing data to be sent
 		while (i_packet_tx) {}
-
 		noInterrupts();
 		i_packet_tx = getpacket(data, i_config.bits, i_config.parity, i_config.stop);
-		
 		TIMER_BEGIN_TX();
 		interrupts();
 	}
@@ -111,7 +110,6 @@ public:
 	Write_Async(byte data) {
 
 		ushort packet = getpacket(data, i_config.bits, i_config.parity, i_config.stop);
-
 		noInterrupts();
 		if (!i_buffer_tx.size) TIMER_BEGIN_TX(); //writing mode already started
 		i_buffer_tx.push(packet);
