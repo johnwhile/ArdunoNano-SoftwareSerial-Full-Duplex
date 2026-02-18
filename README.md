@@ -28,5 +28,21 @@ byte RequestToWrite();
 byte AvailableToWrite();
 byte AvailableToRead();
 ```
+## Write
+
+There are 3 ways to write a byte and they must not be used simultaneously.
+1. This function does not use the timer interrupts but a simple delay. It's blocking code, so the code inside the loop will resume when the byte is completely written. For example, for a serial 8N1 = 10 bits = 1.042mS
+```
+void loop() {
+  Write(byte data) //exist after 1.04mS
+}
+```
+
+```
+Write_WaitAsync(byte data);
+```
+```
+Write_Async(byte data)
+```
 
 
