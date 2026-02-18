@@ -36,7 +36,7 @@ There are 3 ways to write a byte and they must not be used simultaneously.
 1. This function does not use the timer interrupts but a simple delay instead. It's blocking code, so the code inside the loop will resume when the byte is completely written. For example, for a SERIAL_8N1 and baud rate 9600 = 10 bits * 104.17uS = 1.042mS
 ```
 void loop() {
-  Write(byte data) //exist after 1.04mS
+  Write(byte data); //exist after 1.04mS
 }
 ```
 2. This function use timer interrupts, so the code inside the loop can continue in a nearly-asynchronous way, minus some few cycles used by the interrupt function.
@@ -53,8 +53,16 @@ void loop() {
     while(RequestToWrite());  //check overflow
     //exist after some micro seconds
     for (byte data = 0; data < BUFFERSIZE; data++)
-      Write_Async(byte data)
+      Write_Async(byte data);
 }
 ```
 
+## Read
+Reading is independent from user code, uses pin interrupt state changes from HIGH to LOW (FALLING) to start reading and store the data to the read buffer ***i_buffer_rx***. 
+If the data is not processed in time and the external terminal continues to send data, overflow bytes will be lost.
+```
+void loop() {
+  if (AvailableToRead()) byte Read();
+}
+```
 
