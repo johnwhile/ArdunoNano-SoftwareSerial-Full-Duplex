@@ -9,9 +9,14 @@ void setup() {
 }
 
 
-//white 127 bytes with a BUFFERSIZE or 64
 void loop() {
 
+  if (Serial.Available())
+  {
+    mSerial.Write_Async(Serial.Read());
+  }
+
+  /*
   // optional: flush all wrinting byte
   while (mSerial.RequestToWrite())
     delay(mSerial.RequestToWrite() * mSerial.MilliSecondForByte);
@@ -23,4 +28,5 @@ void loop() {
 
     mSerial.Write_Async(b);
   }
+  */
 }
