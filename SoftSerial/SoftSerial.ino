@@ -4,17 +4,22 @@ SoftSerial mSerial;
 
 
 void setup() {
-  mSerial.Begin(2, 3, 9600, SERIAL_8N1);
+  mSerial.Begin(2, 3, 9600, SERIAL_7E1);
   Serial.begin(9600, SERIAL_8N1);
 }
 
 
-void loop() {
+void loop() 
+{
 
-  if (Serial.Available())
+  if (Serial.available()>0)
   {
-    mSerial.Write_Async(Serial.Read());
+    mSerial.Write((byte)Serial.read());
   }
+
+
+  
+  
 
   /*
   // optional: flush all wrinting byte
