@@ -9,9 +9,9 @@
 //cycle for each bit at specified baud rate
 static volatile ushort i_ticks = 1666;
 //can be any digital output
-static volatile byte i_tx = 2;
+static volatile sbyte i_tx = 2;
 //require digital pins With Interrupts, usually 2 and 3
-static volatile byte i_rx = 3;
+static volatile sbyte i_rx = 3;
 //single packet raw data to transmit
 static volatile ushort i_packet_tx = 0;
 //single packet raw data to reading

@@ -4,12 +4,12 @@
 
 
 // FIFO list
-template<class ETYPE> class Queue {
+template<class DATA> class Queue {
 
 private:
   int front = 0;  //buffer[front] not contain data, front is next empty index
   int back = 0;   //buffer[back] contain data
-  ETYPE* buffer = NULL;
+  DATA* buffer = NULL;
 
 public:
   int size = 0;
@@ -18,7 +18,7 @@ public:
 
   Queue(int capacity) {
     this->capacity = capacity;
-    buffer = (ETYPE*)malloc(capacity * sizeof(ETYPE));
+    buffer = (DATA*)malloc(capacity * sizeof(DATA));
   }
 
   ~Queue()
@@ -27,7 +27,7 @@ public:
   }
 
   // Add an element to the buffer
-  bool push(ETYPE val) {
+  bool push(DATA val) {
     if (full()) return false;
     
     buffer[front] = val;
@@ -37,9 +37,9 @@ public:
   }
 
   // Remove an element from the buffer
-  ETYPE pop() {
+  DATA pop() {
     if (empty()) return 0;
-    ETYPE val = buffer[back];
+    DATA val = buffer[back];
     back = (back + 1) % capacity;
     size--;
     return val;

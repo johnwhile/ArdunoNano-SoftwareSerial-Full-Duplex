@@ -18,38 +18,36 @@ public:
 		rx = -1;
 	}
 
-	// Only write mode. If you prefer not to use timer1, modify the code yourself
-	bool Begin(byte tx, uint baud = 9600, uint config = SERIAL_8N1) {
-
-		this->tx = tx;
-		pinMode(tx, OUTPUT);
-		//uart set high voltage when idle
-		digitalWrite(tx, HIGH);
-
-		TIMER_SETUP();
-		i_config.set(baud, config);
-		i_ticks = i_config.ticks_per_bit - ticks_correction;
-		i_tx = tx;
-		i_packet_tx = 0;
-
-		MilliSecondForByte = i_config.uS_per_bit * i_config.tot / 1000;
-
-		return true;
-	}
-
 	// Since reading must use timer1, writing will also be enabled
 	// WARNING: rx use digitalPinToInterrupt, check your board specification
-	bool Begin(byte tx, byte rx, uint baud = 9600, uint config = SERIAL_8N1) {
+	// Set -1 to tx or rx to disable
+	bool Begin(sbyte tx = -1, sbyte rx = -1, uint baud = 9600, uint config = SERIAL_8N1) {
+		
+		if (tx<0 && rx<0) return false;
+		
+		i_config.set(baud, config);
+		i_ticks = i_config.ticks_per_bit - ticks_correction;
+		MilliSecondForByte = i_config.uS_per_bit * i_config.tot / 1000;
+		TIMER_SETUP();
 
-		if (!Begin(tx, baud, config)) return false;
+		if (tx > -1) {
+			this->tx = tx;
+			pinMode(tx, OUTPUT);
+			//uart set high voltage when idle
+			digitalWrite(tx, HIGH);
+			i_tx = tx;
+			i_packet_tx = 0;
+		}
 
-		this->rx = rx;
-		pinMode(rx, INPUT);
-		i_targhet_rx = 1 << (i_config.tot - 1);
-		i_cursor_rx = 0;
-		i_packet_rx = 0;
-		i_rx = rx;
-		attachInterrupt(digitalPinToInterrupt(rx), Interrupt_rx, FALLING);
+		if (rx > -1) {
+			this->rx = rx;
+			pinMode(rx, INPUT);
+			i_targhet_rx = 1 << (i_config.tot - 1);
+			i_cursor_rx = 0;
+			i_packet_rx = 0;
+			i_rx = rx;
+			attachInterrupt(digitalPinToInterrupt(rx), Interrupt_rx, FALLING);
+		}
 		return true;
 	}
 
@@ -60,7 +58,7 @@ public:
 	End() {
 		noInterrupts();
 		TIMER_STOP_RX();
-		if (rx>-1) detachInterrupt(digitalPinToInterrupt(rx));
+		if (rx > -1) detachInterrupt(digitalPinToInterrupt(rx));
 		interrupts();
 		return true;
 	}
@@ -85,7 +83,7 @@ public:
 	// return zero if queue is empty
 	byte Read(bool &valid) {
 		valid = false;
-		return AvailableToRead() ? getdata(i_buffer_rx.pop(), i_config.bits, i_config.parity, valid) : 0;	
+		return AvailableToRead() ? getdata(i_buffer_rx.pop(), i_config.bits, i_config.parity, valid) : 0;
 	}
 
 	// Return and remove the First data from queue reading buffer
@@ -111,21 +109,20 @@ public:
 
 		ushort packet = getpacket(data, i_config.bits, i_config.parity, i_config.stop);
 		noInterrupts();
-		if (!i_buffer_tx.size) TIMER_BEGIN_TX(); //writing mode already started
+		if (!i_buffer_tx.size) TIMER_BEGIN_TX();  //writing mode already started
 		i_buffer_tx.push(packet);
 		interrupts();
 	}
-	
-	// blocking function, not use TIMER1 but delayMicroseconds(). 
+
+	// blocking function, not use TIMER1 but delayMicroseconds().
 	Write(byte data) {
 		ushort packet = getpacket(data, i_config.bits, i_config.parity, i_config.stop);
-		
+
 		while (packet) {
 			digitalWrite(tx, packet & 1);
 			delayMicroseconds(i_config.uS_per_bit - us_correction);
 			packet >>= 1;
 		}
 		digitalWrite(tx, HIGH);
-		
 	}
 };
