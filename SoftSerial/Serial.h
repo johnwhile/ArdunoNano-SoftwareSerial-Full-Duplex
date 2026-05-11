@@ -125,4 +125,10 @@ public:
 		}
 		digitalWrite(tx, HIGH);
 	}
+
+	Write(const char* data) {
+		size_t n = strlen(data);
+		for (int i=0;i<n;i++) Write((byte)data[i]);
+	}
+
 };

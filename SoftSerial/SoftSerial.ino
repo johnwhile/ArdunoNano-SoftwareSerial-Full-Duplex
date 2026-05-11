@@ -4,24 +4,34 @@ SoftSerial mSerial;
 
 
 void setup() {
-  mSerial.Begin(2, 3, 9600, SERIAL_7E1);
+  mSerial.Begin(2, 3, 9600, SERIAL_8N1);
   Serial.begin(9600, SERIAL_8N1);
+
+
 }
 
-
-void loop() 
+void loop()
 {
+  Debug2();
+}
 
+void Debug1()
+{
   if (Serial.available()>0)
   {
     mSerial.Write((byte)Serial.read());
   }
+}
+void Debug2()
+{
+  mSerial.Write("Sulaj Gay");
+  mSerial.Write(13);
+  delay(500);
+}
 
 
-  
-  
-
-  /*
+void Debug3() 
+{
   // optional: flush all wrinting byte
   while (mSerial.RequestToWrite())
     delay(mSerial.RequestToWrite() * mSerial.MilliSecondForByte);
@@ -33,5 +43,4 @@ void loop()
 
     mSerial.Write_Async(b);
   }
-  */
 }

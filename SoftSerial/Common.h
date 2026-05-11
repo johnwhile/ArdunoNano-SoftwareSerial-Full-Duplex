@@ -80,11 +80,11 @@ static byte getdata(ushort packet, const byte bits, const byte parity, bool &val
       break;
       // Even
     case 2:
-      valid &= !is_even_parity(data);
+      valid &= is_even_parity(data);
       break;
       // Odd
     case 3:
-      valid &= is_even_parity(data);
+      valid &= !is_even_parity(data);
       break;
   }
   return data;
@@ -104,13 +104,13 @@ static ushort getpacket(const byte data, const byte bits, const byte parity, byt
 
       //Even
     case 2:
-      if (!is_even_parity(packet)) packet |= flag;
+      if (is_even_parity(packet)) packet |= flag;
       flag <<= 1;
       break;
 
       //Odd
     case 3:
-      if (is_even_parity(packet)) packet |= flag;
+      if (!is_even_parity(packet)) packet |= flag;
       flag <<= 1;
       break;
   }
