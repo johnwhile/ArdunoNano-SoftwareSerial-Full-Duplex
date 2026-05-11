@@ -8,7 +8,7 @@ SoftSerial mSerial;
 void setup()
 {
   Serial.begin(9600, SERIAL_8N1);
-  mSerial.Begin(2, 3);
+  mSerial.Begin(2, 3, 9600, SERIAL_8N1);
 
   Serial.println("");
   Serial.println("SETUP RX");
