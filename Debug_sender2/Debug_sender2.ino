@@ -13,6 +13,9 @@ void setup()
 
 void loop() 
 {
- mSerial.Write("SULAJ GAY\n");
+ mSerial.Write('S');
+ mSerial.Write(13); //printlinebuffer
+ Serial.write('S');
+ Serial.write(13);
  delay(500);
 }
