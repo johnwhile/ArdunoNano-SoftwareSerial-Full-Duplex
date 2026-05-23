@@ -12,8 +12,11 @@ private:
 
 public:
 	int MilliSecondForByte;
-
-	SoftSerial() {
+	bool Initialized;
+	
+	SoftSerial() 
+	{
+		Initialized = false;
 		tx = -1;
 		rx = -1;
 	}
@@ -22,7 +25,7 @@ public:
 	// WARNING: rx use digitalPinToInterrupt, check your board specification
 	// Set -1 to tx or rx to disable
 	bool Begin(sbyte tx = -1, sbyte rx = -1, uint baud = 9600, uint config = SERIAL_8N1) {
-		
+		Initialized = false;
 		if (tx<0 && rx<0) return false;
 		
 		i_config.set(baud, config);
@@ -48,6 +51,8 @@ public:
 			i_rx = rx;
 			attachInterrupt(digitalPinToInterrupt(rx), Interrupt_rx, FALLING);
 		}
+
+		Initialized = true;
 		return true;
 	}
 
@@ -56,6 +61,7 @@ public:
 	}
 
 	End() {
+		Initialized = false;
 		noInterrupts();
 		TIMER_STOP_RX();
 		if (rx > -1) detachInterrupt(digitalPinToInterrupt(rx));
