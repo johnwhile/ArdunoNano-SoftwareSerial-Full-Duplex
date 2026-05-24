@@ -7,41 +7,55 @@ SoftSerial mSerial;
 #define CTS 4
 #define CmdESC 0x1B
 #define CmdTrasmitNextChar 0x73
+#define CmdCancelBuffer 0x07
 
-void setup() 
-{
+void setup() {
   Serial.begin(9600, SERIAL_8N1);
+  mSerial.Begin(TX, RX, 9600, SERIAL_8N1);
+  pinMode(CTS, INPUT);
+  pinMode(LED_BUILTIN, OUTPUT);
 }
 
-byte command[]= {0, 0, 0};
+byte command[] = { 0, 0, 0 };
 bool initialized;
 
-void loop()
-{
-  if (Serial.available())
+
+
+void loop() {
+  
+  bool busy = digitalRead(CTS);
+  digitalWrite(LED_BUILTIN, busy);
+  
+  if (busy) 
   {
-    command[2] = Serial.read(); 
-    
-    if (command[0] == CmdESC && command[1] == CmdTrasmitNextChar)
-    {
-        mSerial.End();
-        mSerial.Begin(TX, RX, 9600, command[2]);
-    }
-
-    command[0] = command[1];
-    command[1] = command[2];
-
-    if (mSerial.Initialized) mSerial.Write(command[2]);
+    delay(500);
+    return;
   }
+  if (Serial.available()) 
+  {
+    command[2] = Serial.read();
 
+    if (command[0] == CmdESC && command[1] == CmdTrasmitNextChar) {
+      mSerial.End();
+      mSerial.Begin(TX, RX, 9600, command[2]);
+      if (mSerial.Initialized) 
+      {
+        mSerial.Write('#');
+        mSerial.Write(CmdCancelBuffer);
+      }
+      command[0] = command[1] = command[2] = 0;
+    } 
+    else {
+      command[0] = command[1];
+      command[1] = command[2];
 
-
-
+      if (mSerial.Initialized) mSerial.Write(command[2]);
+    }
+  }
 }
 
 
-void Debug() 
-{
+void Debug() {
   // optional: flush all wrinting byte
   while (mSerial.RequestToWrite())
     delay(mSerial.RequestToWrite() * mSerial.MilliSecondForByte);
