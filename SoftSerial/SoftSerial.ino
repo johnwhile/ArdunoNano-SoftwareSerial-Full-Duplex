@@ -11,14 +11,19 @@ SoftSerial mSerial;
 
 void setup() {
   Serial.begin(9600, SERIAL_8N1);
-  mSerial.Begin(TX, RX, 9600, SERIAL_8N1);
+  mSerial.Begin(TX, RX, 9600, SERIAL_7E1);
+  
+  mSerial.Write(CmdCancelBuffer);
+  mSerial.Write("READY");
+  mSerial.Write(0x0D);
+  mSerial.Write(0x0A);
+  
   pinMode(CTS, INPUT);
   pinMode(LED_BUILTIN, OUTPUT);
 }
 
 byte command[] = { 0, 0, 0 };
 bool initialized;
-
 
 
 void loop() {
@@ -28,7 +33,7 @@ void loop() {
   
   if (busy) 
   {
-    delay(500);
+    delay(10);
     return;
   }
   if (Serial.available()) 
