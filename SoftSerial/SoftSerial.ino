@@ -12,10 +12,14 @@ const byte CmdCancelBuffer = 7;
 const byte XOFF = 19;
 const byte XON = 17;
 
+byte current, previous1, previous2;
+bool initialized;
+bool isON;
+
 
 void setup() {
   Serial.begin(9600, SERIAL_8N1);
-  Serial.write(XON);
+  isON = false;
 
   mSerial.Begin(TX, RX, 9600, SERIAL_7E1);
   mSerial.Write(CmdCancelBuffer);
@@ -27,56 +31,76 @@ void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
 }
 
-byte command[] = { 0, 0, 0 };
-bool initialized;
+void Handshake_ON() {
 
+    Serial.write(XON);
+  
+}
+void Handshake_OFF() {
 
-void loop() {
+    Serial.write(XOFF);
 
-  //Handshake XOnXOff. Serial receive buffer holds 64 bytes
+  
+}
+
+void loop()
+{
+  Handshake_OFF();
   int count = Serial.available();
-  if (count > 60) Serial.write(XOFF);
-  if (count == 0) Serial.write(XON);
 
-  //The thermal printer is busy, stop sending
-  bool busy = digitalRead(CTS);
-  digitalWrite(LED_BUILTIN, busy);
-
-  if (!busy & count) 
+  if (count > 0)
   {
-    command[2] = Serial.read();
-    if (command[0] == CmdESC && command[1] == CmdTrasmitNextChar) {
-      mSerial.End();
-      mSerial.Begin(TX, RX, 9600, command[2]);
-      if (mSerial.Initialized) {
-        mSerial.Write('#');
-        mSerial.Write(CmdCancelBuffer);
-      }
-      command[0] = command[1] = command[2] = 0;
-    } else {
-      command[0] = command[1];
-      command[1] = command[2];
+    Handshake_OFF();
+    int count = 0;
+    Serial.print("write bytes: ");
+    Serial.println(count);
 
-      if (mSerial.Initialized) mSerial.Write(command[2]);
+    while(Serial.available())
+    {
+      mSerial.Write(Serial.read());
     }
-  }
-  else 
-  {
     delay(10);
   }
 }
 
 
-void Debug() {
-  // optional: flush all wrinting byte
-  while (mSerial.RequestToWrite())
-    delay(mSerial.RequestToWrite() * mSerial.MilliSecondForByte);
 
-  for (byte b = 0; b < 127; b++) {
-    //optional: wait at least 10 free space in writing buffer
-    while (mSerial.AvailableToWrite() < 10)
-      delay(10 - mSerial.AvailableToWrite() * mSerial.MilliSecondForByte);
 
-    mSerial.Write_Async(b);
-  }
+void loop1() {
+  
+  int count = 0;
+
+  do {
+    count = Serial.available();
+    if (count>60) Handshake_OFF();
+
+    //The thermal printer is busy, stop sending
+    bool busy = digitalRead(CTS);
+    digitalWrite(LED_BUILTIN, busy);
+    
+    if (busy) {
+      Handshake_OFF();
+      delay(100);
+      continue;
+    }
+
+    if (count > 0) {
+      byte current = Serial.read();
+      if (current == CmdESC && previous1 == CmdTrasmitNextChar) {
+        mSerial.End();
+        mSerial.Begin(TX, RX, 9600, current);
+        {
+          mSerial.Write('#');
+          mSerial.Write(CmdCancelBuffer);
+        }
+        current = previous1 = previous2 = 0;
+      } else {
+        previous2 = previous1;
+        previous1 = current;
+      }
+      mSerial.Write(current);
+    }
+  } while (count);
+
+  Handshake_ON();
 }
