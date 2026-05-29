@@ -12,14 +12,14 @@ const byte CmdCancelBuffer = 7;
 const byte XOFF = 19;
 const byte XON = 17;
 
+
+bool sended = false;
 byte current, previous1, previous2;
-bool initialized;
-bool isON;
+
 
 
 void setup() {
   Serial.begin(9600, SERIAL_8N1);
-  isON = false;
 
   mSerial.Begin(TX, RX, 9600, SERIAL_7E1);
   mSerial.Write(CmdCancelBuffer);
@@ -32,75 +32,40 @@ void setup() {
 }
 
 void Handshake_ON() {
-
-    Serial.write(XON);
-  
+  if (sended) return;
+  Serial.write(0);
+  sended = true;
 }
+
 void Handshake_OFF() {
-
-    Serial.write(XOFF);
-
-  
+  sended = false;
 }
 
-void loop()
-{
-  Handshake_OFF();
-  int count = Serial.available();
-
-  if (count > 0)
-  {
+void loop() {
+  while (Serial.available()) {
     Handshake_OFF();
-    int count = 0;
-    Serial.print("write bytes: ");
-    Serial.println(count);
-
-    while(Serial.available())
-    {
-      mSerial.Write(Serial.read());
-    }
-    delay(10);
-  }
-}
-
-
-
-
-void loop1() {
-  
-  int count = 0;
-
-  do {
-    count = Serial.available();
-    if (count>60) Handshake_OFF();
 
     //The thermal printer is busy, stop sending
     bool busy = digitalRead(CTS);
     digitalWrite(LED_BUILTIN, busy);
-    
-    if (busy) {
-      Handshake_OFF();
-      delay(100);
-      continue;
-    }
 
-    if (count > 0) {
-      byte current = Serial.read();
-      if (current == CmdESC && previous1 == CmdTrasmitNextChar) {
-        mSerial.End();
-        mSerial.Begin(TX, RX, 9600, current);
-        {
-          mSerial.Write('#');
-          mSerial.Write(CmdCancelBuffer);
-        }
-        current = previous1 = previous2 = 0;
-      } else {
-        previous2 = previous1;
-        previous1 = current;
+    if (busy) continue;
+
+    byte current = Serial.read();
+    if (current == CmdESC && previous1 == CmdTrasmitNextChar) {
+      mSerial.End();
+      mSerial.Begin(TX, RX, 9600, current);
+      {
+        mSerial.Write('#');
+        mSerial.Write(CmdCancelBuffer);
       }
-      mSerial.Write(current);
+      current = previous1 = previous2 = 0;
+    } else {
+      previous2 = previous1;
+      previous1 = current;
     }
-  } while (count);
-
+    mSerial.Write(current);
+  }
   Handshake_ON();
+  delay(100);
 }
